@@ -43,5 +43,15 @@ $userTextBox.Add_KeyPress({
     }
 })
 
+# Add a large read-only text box beneath the progress bar
+$largeTextBox = New-Object System.Windows.Forms.TextBox
+$largeTextBox.Location = New-Object System.Drawing.Point(50, 510)
+$largeTextBox.Size = New-Object System.Drawing.Size(1100, 400)
+$largeTextBox.Multiline = $true
+$largeTextBox.ScrollBars = "Vertical"
+$largeTextBox.ReadOnly = $true
+$largeTextBox.Font = New-Object System.Drawing.Font("Arial", 12, [System.Drawing.FontStyle]::Regular)
+$form.Controls.Add($largeTextBox)
+
 # Show the form
 $form.ShowDialog()

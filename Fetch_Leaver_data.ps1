@@ -33,17 +33,15 @@ Connect-AzureAD
     }
       
       catch [Microsoft.Open.Azure.AD.CommonLibrary.AadNeedAuthenticationException] {
-    [System.Windows.Forms.MessageBox]::Show("You must connect to AzureAD/Identity before calling Azure commands", "Authentication Required")
+    [System.Windows.Forms.MessageBox]::Show("You must connect to AzureAD/Identity before calling Azure commands", "ERROR_AZURE_AUTHENTICATION_REQUUIRED_101")
 }
       catch {
         if ($_.Exception.Message -like "*Cannot bind argument to parameter 'ObjectId' because it is null.*") {
-            [System.Windows.Forms.MessageBox]::Show("The username '$username' is invalid or does not exist.", "Invalid Username")
+            [System.Windows.Forms.MessageBox]::Show("The username '$username' is invalid or does not exist.", "ERROR_INVALID_USERNAME_012")
         }
         else {
             #[System.Windows.Forms.MessageBox]::Show("An error occurred: $($_.Exception.Message)", "Error")
         }
-
-
 }
 }
     function Get-SulcoUserGroupsExport

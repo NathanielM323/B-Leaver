@@ -12,8 +12,8 @@ Connect-AzureAD
     {
     param ([String]$username)
     #retrieves groups from AAD
-    $username = 'delton.fernandes' 
-    $accountName = Get-ADUser -Filter {SamAccountname -eq $username} 
+    $username = 'jasleen.haer' 
+    $accountName = Get-ADUser -Filter {SamAccountname -eq $username} l
      
     try{$membership = Get-AzureADUserMembership -ObjectId $accountName.UserPrincipalName | Where-Object {$_.ObjectType -eq "Group"} | Select-Object DisplayName
 
@@ -33,7 +33,7 @@ Connect-AzureAD
     }
       
       catch [Microsoft.Open.Azure.AD.CommonLibrary.AadNeedAuthenticationException] {
-    [System.Windows.Forms.MessageBox]::Show("You must connect to AzureAD/Identity before calling Azure commands", "ERROR_AZURE_AUTHENTICATION_REQUUIRED_101")
+    [System.Windows.Forms.MessageBox]::Show("You must connect to AzureAD/Identity before calling Azure commands", "ERROR_AZURE_AUTHENTICATION_REQUIRED_101")
 }
       catch {
         if ($_.Exception.Message -like "*Cannot bind argument to parameter 'ObjectId' because it is null.*") {
@@ -53,71 +53,147 @@ Connect-AzureAD
     #Sort membership by alphabetical order
     $membership = $membership |Sort-Object DisplayName
 
-    # Show Save File dialog for exporting
-    $saveFileDialog = New-Object System.Windows.Forms.SaveFileDialog
-    $saveFileDialog.Title = "Save CSV File"
-    $saveFileDialog.Filter = "CSV Files (*.csv)|*.csv"
-    $saveFileDialog.FileName = "group_membership_($username).csv"
+    $directoryPath = "\\cfel.local\dfsroot\group\ICT\Nathaniel\Leaver\Leaver Automation\B-Leaver\Leaver Data\$username"
+        if (-not (Test-Path -Path $directoryPath)) {
+            New-Item -Path $directoryPath -ItemType "directory" | Out-Null
+        }
+    
+        # Define CSV file path with the username in the filename
+        $csvFilePath = "$directoryPath\($username) Group memberships.csv"
 
-    if ($saveFileDialog.ShowDialog() -eq "OK") {
-        $csvPath = $saveFileDialog.FileName
-        $membership | Export-Csv -Path $csvPath -NoTypeInformation
-        [System.Windows.Forms.MessageBox]::Show("Group membership exported to CSV successfully.", "Export Complete")
+        $membership | Export-Csv -Path $csvFilePath -NoTypeInformation
+        [System.Windows.Forms.MessageBox]::Show("Group memberships exported as CSV to $directoryPath successfully.", "Export Complete")
     }
-    }
-    catch 
-    {
-    [System.Windows.Forms.MessageBox]::Show("Invalid username or error occurred.", "Error")
-    }
+      
+      catch [Microsoft.Open.Azure.AD.CommonLibrary.AadNeedAuthenticationException] {
+    [System.Windows.Forms.MessageBox]::Show("You must connect to AzureAD/Identity before calling Azure commands", "ERROR_AZURE_AUTHENTICATION_REQUIRED_101")
+}
+
+      catch {
+        if ($_.Exception.Message -like "*Cannot bind argument to parameter 'ObjectId' because it is null.*") {
+            [System.Windows.Forms.MessageBox]::Show("The username '$username' is invalid or does not exist.", "ERROR_INVALID_USERNAME_012")
+        }
+        else {
+            #[System.Windows.Forms.MessageBox]::Show("An error occurred: $($_.Exception.Message)", "Error")
+            }
+        }
     }
 
     function Get-BBBUserDLExport
     {
-        $BBBaddress = "$username@british-business-bank.co.uk"
- 
-            try {$DistributionGroups = Get-DistributionGroup | where { (Get-DistributionGroupMember $_.Name | foreach {$_.PrimarySmtpAddress}) -contains $BBBaddress }
-            
-                    # Show Save File dialog for exporting
-                    $saveFileDialog = New-Object System.Windows.Forms.SaveFileDialog
-                    $saveFileDialog.Title = "Save CSV File"
-                    $saveFileDialog.Filter = "CSV Files (*.csv)|*.csv"
-                    $saveFileDialog.FileName = "DL_($username).csv"
+       $accountName = Get-ADUser -Filter {SamAccountname -eq $username} -Properties EmailAddress
+       $BBBaddress = $accountName.EmailAddress
 
-                    if ($saveFileDialog.ShowDialog() -eq "OK") {
-                        $csvPath = $saveFileDialog.FileName
-                        $DistributionGroups | Export-Csv -Path $csvPath -NoTypeInformation
-                        [System.Windows.Forms.MessageBox]::Show("Distribution Lists exported to CSV successfully.", "Export Complete")
-                    }            
+        try {
+            $allDistributionGroups = Get-DistributionGroup -ResultSize Unlimited
+            $totalDLs = $allDistributionGroups.Count
+            $progress = 0
+            # Array to store DLs user has access to
+            $DLswithAccess = @()
+            # Loop through each DL to see if user has access
+            foreach ($DL in $allDistributionGroups) {
+                $members = Get-DistributionGroupMember -Identity $DL.Identity
+                if ($members.PrimarySmtpAddress -contains $BBBaddress) {
+                    $DLswithAccess += $DL.PrimarySmtpAddress
+                }
+                $progress++
+                Write-Progress -Activity "Checking Distribution Groups" -Status "$progress out of $totalDLs" -PercentComplete (($progress / $totalDLs) * 100)
             }
-            catch {
-                [System.Windows.Forms.MessageBox]::Show("Error occurred.", "Error")
+            $directoryPath = "\\cfel.local\dfsroot\group\ICT\Nathaniel\Leaver\Leaver Automation\B-Leaver\Leaver Data\$username"
+            if (-not (Test-Path -Path $directoryPath)) {
+                New-Item -Path $directoryPath -ItemType "directory" | Out-Null
             }
 
-           # [System.Windows.Forms.MessageBox]::Show( "This worked")
-             write-host $BBBaddress
-    }
+            # Define CSV file path with the username in the filename
+            $csvFilePath = "$directoryPath\($username) Distribution_Lists.csv"
     
+            # Create a custom object for each distribution list
+            $DLObjects = $DLswithAccess | ForEach-Object {
+                [PSCustomObject]@{
+                    DistributionList = $_
+                }
+            }
+    
+            # Export the custom objects to CSV
+            $DLObjects | Export-Csv -Path $csvFilePath -NoTypeInformation
+    
+            [System.Windows.Forms.MessageBox]::Show("Group memberships exported as CSV to $directoryPath successfully.", "Export Complete")
+        }
+
+         catch [System.Management.Automation.CommandNotFoundException] 
+    
+            {
+                if ($_.Exception.CommandName -eq 'Get-DistributionGroup') {
+                    Write-Error "The Exchange Online PowerShell module is not loaded or not connected. Please ensure you've connected to Exchange Online before running this script."
+                    # Optionally, you can try to connect to Exchange Online here
+                    # Connect-ExchangeOnline
+                }
+                else {
+                    # Re-throw if it's a different CommandNotFoundException
+                    throw
+                }
+        }
+        catch {
+            [System.Windows.Forms.MessageBox]::Show("Error occurred: $($_.Exception.Message)", "Error")
+        }
+    }
+   
     function Get-SulcoUserDLExport
     {
-     $Sulcoaddress = "$username@startuploans.co.uk"
+     #$username = 'karma.murphy'
+     $sulcoAddress = "$username@startuploans.co.uk"
  
-            try {$DistributionGroups = Get-DistributionGroup | where { (Get-DistributionGroupMember $_.Name | foreach {$_.PrimarySmtpAddress}) -contains $sulcoaddress}
-            
-                    # Show Save File dialog for exporting
-                    $saveFileDialog = New-Object System.Windows.Forms.SaveFileDialog
-                    $saveFileDialog.Title = "Save CSV File"
-                    $saveFileDialog.Filter = "CSV Files (*.csv)|*.csv"
-                    $saveFileDialog.FileName = "DL_($username).csv"
+           try {
+                $allDistributionGroups = Get-DistributionGroup -ResultSize Unlimited
+                $totalDLs = $allDistributionGroups.Count
+                $progress = 0
+                # Array to store DLs user has access to
+                $DLswithAccess = @()
+                # Loop through each DL to see if user has access
+                foreach ($DL in $allDistributionGroups) {
+                    $members = Get-DistributionGroupMember -Identity $DL.Identity
+                    if ($members.PrimarySmtpAddress -contains $sulcoAddress) {
+                        $DLswithAccess += $DL.PrimarySmtpAddress
+                    }
+                    $progress++
+                    Write-Progress -Activity "Checking Distribution Groups" -Status "$progress out of $totalDLs" -PercentComplete (($progress / $totalDLs) * 100)
+                }
+                $directoryPath = "\\cfel.local\dfsroot\group\ICT\Nathaniel\Leaver\Leaver Automation\B-Leaver\Leaver Data\$username"
+                if (-not (Test-Path -Path $directoryPath)) {
+                    New-Item -Path $directoryPath -ItemType "directory" | Out-Null
+                }
 
-                    if ($saveFileDialog.ShowDialog() -eq "OK") {
-                        $csvPath = $saveFileDialog.FileName
-                        $DistributionGroups | Export-Csv -Path $csvPath -NoTypeInformation
-                        [System.Windows.Forms.MessageBox]::Show("Distribution Lists exported to CSV successfully.", "Export Complete")
-                    }            
+                # Define CSV file path with the username in the filename
+                $csvFilePath = "$directoryPath\($username) Distribution_Lists.csv"
+    
+                # Create a custom object for each distribution list
+                $DLObjects = $DLswithAccess | ForEach-Object {
+                    [PSCustomObject]@{
+                        DistributionList = $_
+                    }
+                }
+    
+                # Export the custom objects to CSV
+                $DLObjects | Export-Csv -Path $csvFilePath -NoTypeInformation
+    
+                [System.Windows.Forms.MessageBox]::Show("Group memberships exported as CSV to $directoryPath successfully.", "Export Complete")
             }
-            catch {
-                [System.Windows.Forms.MessageBox]::Show("Error occurred.", "Error")
-            }
+
+ catch [System.Management.Automation.CommandNotFoundException]    
+    {
+        if ($_.Exception.CommandName -eq 'Get-DistributionGroup') {
+            Write-Error "The Exchange Online PowerShell module is not loaded or not connected. Please ensure you've connected to Exchange Online before running this script."
+            # Optionally, you can try to connect to Exchange Online here
+            # Connect-ExchangeOnline
+        }
+        else {
+            # Re-throw if it's a different CommandNotFoundException
+            throw
+        }
+}
+catch {
+    [System.Windows.Forms.MessageBox]::Show("Error occurred: $($_.Exception.Message)", "Error")
+}
 
            # [System.Windows.Forms.MessageBox]::Show( "This worked")
              write-host $sulcoaddress

@@ -29,7 +29,7 @@ Connect-AzureAD
         $csvFilePath = "$directoryPath\($username) Group memberships.csv"
 
         $membership | Export-Csv -Path $csvFilePath -NoTypeInformation
-        [System.Windows.Forms.MessageBox]::Show("Group memberships exported as CSV to $directoryPath successfully.", "Export Complete")
+        #[System.Windows.Forms.MessageBox]::Show("Group memberships exported as CSV to $directoryPath successfully.", "Export Complete")
     }
       
       catch [Microsoft.Open.Azure.AD.CommonLibrary.AadNeedAuthenticationException] {
@@ -62,7 +62,7 @@ Connect-AzureAD
         $csvFilePath = "$directoryPath\($username) Group memberships.csv"
 
         $membership | Export-Csv -Path $csvFilePath -NoTypeInformation
-        [System.Windows.Forms.MessageBox]::Show("Group memberships exported as CSV to $directoryPath successfully.", "Export Complete")
+        #[System.Windows.Forms.MessageBox]::Show("Group memberships exported as CSV to $directoryPath successfully.", "Export Complete")
     }
       
       catch [Microsoft.Open.Azure.AD.CommonLibrary.AadNeedAuthenticationException] {
@@ -81,6 +81,7 @@ Connect-AzureAD
 
     function Get-BBBUserDLExport
     {
+       param ([String]$username)
        $accountName = Get-ADUser -Filter {SamAccountname -eq $username} -Properties EmailAddress
        $BBBaddress = $accountName.EmailAddress
 
@@ -117,7 +118,7 @@ Connect-AzureAD
             # Export the custom objects to CSV
             $DLObjects | Export-Csv -Path $csvFilePath -NoTypeInformation
     
-            [System.Windows.Forms.MessageBox]::Show("Group memberships exported as CSV to $directoryPath successfully.", "Export Complete")
+            #[System.Windows.Forms.MessageBox]::Show("Group memberships exported as CSV to $directoryPath successfully.", "Export Complete")
         }
 
          catch [System.Management.Automation.CommandNotFoundException] 
@@ -141,6 +142,7 @@ Connect-AzureAD
    
     function Get-SulcoUserDLExport
     {
+     param ([String]$username)
      $sulcoAddress = "$username@startuploans.co.uk"
  
            try {
@@ -176,7 +178,7 @@ Connect-AzureAD
                 # Export the custom objects to CSV
                 $DLObjects | Export-Csv -Path $csvFilePath -NoTypeInformation
     
-                [System.Windows.Forms.MessageBox]::Show("Group memberships exported as CSV to $directoryPath successfully.", "Export Complete")
+                #[System.Windows.Forms.MessageBox]::Show("Group memberships exported as CSV to $directoryPath successfully.", "Export Complete")
             }
 
  catch [System.Management.Automation.CommandNotFoundException]    
@@ -198,7 +200,7 @@ catch {
     }
 
     function Get-BBBSharedMailbox {
-
+    param ([String]$username)
     $accountName = Get-ADUser -Filter {SamAccountname -eq $username} -Properties EmailAddress
     $BBBaddress = $accountName.EmailAddress
 
@@ -236,7 +238,7 @@ catch {
 
         # Export mailboxes to CSV
         $MailboxesWithAccess | Export-Csv -Path $csvFilePath -NoTypeInformation
-        [System.Windows.Forms.MessageBox]::Show("Shared mailboxes exported as CSV to $directoryPath successfully.", "Export Complete")
+        #[System.Windows.Forms.MessageBox]::Show("Shared mailboxes exported as CSV to $directoryPath successfully.", "Export Complete")
         } catch {
         [System.Windows.Forms.MessageBox]::Show("Error occurred.", "Error")
             }
@@ -247,6 +249,7 @@ catch {
 
     function Get-SulcoMailbox
     {      
+         param ([String]$username)
          $sulcoAddress = "$username@startuploans.co.uk"        
                  
           try {
@@ -282,7 +285,7 @@ catch {
 
             # Export mailboxes to CSV
             $MailboxesWithAccess | Export-Csv -Path $csvFilePath -NoTypeInformation
-            [System.Windows.Forms.MessageBox]::Show("Shared mailboxes exported as CSV to $directoryPath successfully.", "Export Complete")
+            #[System.Windows.Forms.MessageBox]::Show("Shared mailboxes exported as CSV to $directoryPath successfully.", "Export Complete")
             } catch {
             [System.Windows.Forms.MessageBox]::Show("Error occurred.", "Error")
                 }

@@ -125,6 +125,7 @@ Connect-AzureAD
             {
                 if ($_.Exception.CommandName -eq 'Get-DistributionGroup') {
                     Write-Error "The Exchange Online PowerShell module is not loaded or not connected. Please ensure you've connected to Exchange Online before running this script."
+                    [System.Windows.Forms.MessageBox]::Show("You must connect to MSExchange Online", "ERROR_MSE_AUTHENTICATION_REQUIRED_113")
                     # Optionally, you can try to connect to Exchange Online here
                     # Connect-ExchangeOnline
                 }
@@ -140,7 +141,6 @@ Connect-AzureAD
    
     function Get-SulcoUserDLExport
     {
-     #$username = 'karma.murphy'
      $sulcoAddress = "$username@startuploans.co.uk"
  
            try {
@@ -195,60 +195,16 @@ catch {
     [System.Windows.Forms.MessageBox]::Show("Error occurred: $($_.Exception.Message)", "Error")
 }
 
-           # [System.Windows.Forms.MessageBox]::Show( "This worked")
-             write-host $sulcoaddress
     }
 
     function Get-BBBSharedMailbox {
-    $BBBemailaddress = "$username@british-business-bank.co.uk"
 
-# Get all mailboxes
-try {
-    $AllMailboxes = Get-Mailbox -ResultSize Unlimited
-    $totalMailboxes = $AllMailboxes.Count
-    $progress = 0
+    $accountName = Get-ADUser -Filter {SamAccountname -eq $username} -Properties EmailAddress
+    $BBBaddress = $accountName.EmailAddress
 
-    # Array to store mailboxes the user has access to
-    $MailboxesWithAccess = @()
-
-    # Loop through each mailbox and check if the user has access
-    foreach ($Mailbox in $AllMailboxes) {
-        $MailboxPermissions = Get-MailboxPermission -Identity $Mailbox.DistinguishedName | Where-Object { $_.User -like $BBBemailaddress -and $_.AccessRights -like "FullAccess" }
-        if ($MailboxPermissions) {
-            $MailboxesWithAccess += $Mailbox
-        }
-
-        # Update progress
-        $progress++
-        $percentComplete = ($progress / $totalMailboxes) * 100
-        Write-Progress -Activity "Checking Mailbox Permissions" -Status "Progress: $percentComplete% Complete" -PercentComplete $percentComplete
-    }
-
-    # Create Directory to save
-    $directoryPath = "\\cfel.local\dfsroot\group\ICT\Nathaniel\Leaver\Leaver Automation\B-Leaver\Leaver Data\$username"
-    if (-not (Test-Path -Path $directoryPath)) {
-        New-Item -Path $directoryPath -ItemType "directory" | Out-Null
-    }
     
-    # Define CSV file path with the username in the filename
-    $csvFilePath = "$directoryPath\($username) Mailbox access.csv"
-
-    # Export mailboxes to CSV
-    $MailboxesWithAccess | Export-Csv -Path $csvFilePath -NoTypeInformation
-    [System.Windows.Forms.MessageBox]::Show("Shared mailboxes exported as CSV to $directoryPath successfully.", "Export Complete")
-    } catch {
-    [System.Windows.Forms.MessageBox]::Show("Error occurred.", "Error")
-        }
-    }
-    # Uncomment the below line if you want to display the mailboxes in the console
-     $MailboxesWithAccess | Select-Object DisplayName, UserPrincipalName | Out-Host
-     
-
-    function Get-SulcoMailbox
-    {
-         $sulcoEmailAddress = "$username@startuploans.co.uk"        
-         #Get all mailboxes
     try {
+        # Get all mailboxes
         $AllMailboxes = Get-Mailbox -ResultSize Unlimited
         $totalMailboxes = $AllMailboxes.Count
         $progress = 0
@@ -258,7 +214,7 @@ try {
 
         # Loop through each mailbox and check if the user has access
         foreach ($Mailbox in $AllMailboxes) {
-            $MailboxPermissions = Get-MailboxPermission -Identity $Mailbox.DistinguishedName | Where-Object { $_.User -like $sulcoemailaddress -and $_.AccessRights -like "FullAccess" }
+            $MailboxPermissions = Get-MailboxPermission -Identity $Mailbox.DistinguishedName | Where-Object { $_.User -like $BBBeaddress -and $_.AccessRights -like "FullAccess" }
             if ($MailboxPermissions) {
                 $MailboxesWithAccess += $Mailbox
             }
@@ -269,21 +225,67 @@ try {
             Write-Progress -Activity "Checking Mailbox Permissions" -Status "Progress: $percentComplete% Complete" -PercentComplete $percentComplete
         }
 
-        # Show Save File dialog for exporting
-        $saveFileDialog = New-Object System.Windows.Forms.SaveFileDialog
-        $saveFileDialog.Title = "Save CSV File"
-        $saveFileDialog.Filter = "CSV Files (*.csv)|*.csv"
-        $saveFileDialog.FileName = "Shared Mailboxes_($username).csv"
-
-        if ($saveFileDialog.ShowDialog() -eq "OK") {
-            $csvPath = $saveFileDialog.FileName
-            $MailboxesWithAccess | Export-Csv -Path $csvPath -NoTypeInformation
-            [System.Windows.Forms.MessageBox]::Show("Shared mailboxes exported to CSV successfully.", "Export Complete")
-
+        # Create Directory to save
+        $directoryPath = "\\cfel.local\dfsroot\group\ICT\Nathaniel\Leaver\Leaver Automation\B-Leaver\Leaver Data\$username"
+        if (-not (Test-Path -Path $directoryPath)) {
+            New-Item -Path $directoryPath -ItemType "directory" | Out-Null
         }
-    } catch {
+    
+        # Define CSV file path with the username in the filename
+        $csvFilePath = "$directoryPath\($username) Mailbox access.csv"
+
+        # Export mailboxes to CSV
+        $MailboxesWithAccess | Export-Csv -Path $csvFilePath -NoTypeInformation
+        [System.Windows.Forms.MessageBox]::Show("Shared mailboxes exported as CSV to $directoryPath successfully.", "Export Complete")
+        } catch {
         [System.Windows.Forms.MessageBox]::Show("Error occurred.", "Error")
+            }
     }
+    # Uncomment the below line if you want to display the mailboxes in the console
+    # $MailboxesWithAccess | Select-Object DisplayName, UserPrincipalName | Out-Host
+     
+
+    function Get-SulcoMailbox
+    {      
+         $sulcoAddress = "$username@startuploans.co.uk"        
+                 
+          try {
+            # Get all mailboxes
+            $AllMailboxes = Get-Mailbox -ResultSize Unlimited
+            $totalMailboxes = $AllMailboxes.Count
+            $progress = 0
+
+            # Array to store mailboxes the user has access to
+            $MailboxesWithAccess = @()
+
+            # Loop through each mailbox and check if the user has access
+            foreach ($Mailbox in $AllMailboxes) {
+                $MailboxPermissions = Get-MailboxPermission -Identity $Mailbox.DistinguishedName | Where-Object { $_.User -like $sulcoAddress -and $_.AccessRights -like "FullAccess" }
+                if ($MailboxPermissions) {
+                    $MailboxesWithAccess += $Mailbox
+                }
+
+                # Update progress
+                $progress++
+                $percentComplete = ($progress / $totalMailboxes) * 100
+                Write-Progress -Activity "Checking Mailbox Permissions" -Status "Progress: $percentComplete% Complete" -PercentComplete $percentComplete
+            }
+
+            # Create Directory to save
+            $directoryPath = "\\cfel.local\dfsroot\group\ICT\Nathaniel\Leaver\Leaver Automation\B-Leaver\Leaver Data\$username"
+            if (-not (Test-Path -Path $directoryPath)) {
+                New-Item -Path $directoryPath -ItemType "directory" | Out-Null
+            }
+    
+            # Define CSV file path with the username in the filename
+            $csvFilePath = "$directoryPath\($username) Mailbox access.csv"
+
+            # Export mailboxes to CSV
+            $MailboxesWithAccess | Export-Csv -Path $csvFilePath -NoTypeInformation
+            [System.Windows.Forms.MessageBox]::Show("Shared mailboxes exported as CSV to $directoryPath successfully.", "Export Complete")
+            } catch {
+            [System.Windows.Forms.MessageBox]::Show("Error occurred.", "Error")
+                }
     
     }
 

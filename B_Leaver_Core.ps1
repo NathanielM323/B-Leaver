@@ -7,7 +7,14 @@ $modulePath = Join-Path $exePath "Fetch_Leaver_data.psm1"
 Import-Module $modulePath -Force
 
 Get-Module -Name Fetch_Leaver_data
+#--------------------------------------------------------
 
+if (Get-Module -Name "Fetch_Leaver_data") {
+    Write-Host "Module 'Fetch_Leaver_data' is successfully imported."
+    Get-Command -Module "Fetch_Leaver_data" | ForEach-Object { Write-Host "Function available: $($_.Name)" }
+} else {
+    Write-Host "Module 'Fetch_Leaver_data' is not imported."
+}
 
 # Load Windows Forms Assembly
 Add-Type -AssemblyName System.Windows.Forms
@@ -92,7 +99,7 @@ foreach ($index in 0..($checkboxOptions.Count - 1)) {
 
 # Add this after creating the checkboxes
 $checkboxO365Groups = $checkboxes[1]  # Assuming "Retrieve O365 groups" is the second checkbox
-
+$username = "reece.harrod"
 # Modify the button click event
 # Create a button to fetch user groups
 $button = New-Object System.Windows.Forms.Button

@@ -1,12 +1,11 @@
-﻿#Import Fetch Leaver Data module using reletive file path
-
-$exePath = [System.IO.Path]::GetDirectoryName([System.Reflection.Assembly]::GetExecutingAssembly().Location)
-$modulePath = Join-Path $exePath "Fetch_Leaver_data.psm1"
+﻿$currentDirectory = Get-Location
+$modulePath = Join-Path $currentDirectory "Fetch_Leaver_data.psm1"
 
 # Import the module using the path
 Import-Module $modulePath -Force
 
 Get-Module -Name Fetch_Leaver_data
+
 #--------------------------------------------------------
 
 if (Get-Module -Name "Fetch_Leaver_data") {
@@ -99,7 +98,6 @@ foreach ($index in 0..($checkboxOptions.Count - 1)) {
 
 # Add this after creating the checkboxes
 $checkboxO365Groups = $checkboxes[1]  # Assuming "Retrieve O365 groups" is the second checkbox
-$username = "reece.harrod"
 # Modify the button click event
 # Create a button to fetch user groups
 $button = New-Object System.Windows.Forms.Button
@@ -155,3 +153,4 @@ $form.Controls.Add($largeTextBox)
 
 # Show the form
 $form.ShowDialog()
+

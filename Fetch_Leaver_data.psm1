@@ -432,7 +432,7 @@ $form.controls.Add($SMbutton)
 
 
 # Show the form
-$form.ShowDialog() | Out-Null
+#$form.ShowDialog() | Out-Null
 
 #Disconnect-AzureAD
 #Disconnect-ExchangeOnline

@@ -1,4 +1,6 @@
-﻿$currentDirectory = Get-Location
+﻿cd '\\cfel.local\dfsroot\ICT\Nathaniel\Leaver\Leaver Automation\B-Leaver\B-Leaver(git)'
+
+$currentDirectory = Get-Location
 $modulePath = Join-Path $currentDirectory "Fetch_Leaver_data.psm1"
 
 # Import the module using the path
@@ -25,11 +27,11 @@ $form.Size = New-Object System.Drawing.Size(1200, 1200)
 $form.StartPosition = "CenterScreen"
 
 # Add a label to display current process
-$label = New-Object System.Windows.Forms.Label
-$label.Text = "Status: Idle"
-$label.AutoSize = $true
-$label.Location = New-Object System.Drawing.Point(50, 460)
-$form.Controls.Add($label)
+$StatusLabel = New-Object System.Windows.Forms.Label
+$StatusLabel.Text = "Status: Idle"
+$StatusLabel.AutoSize = $true
+$StatusLabel.Location = New-Object System.Drawing.Point(50, 460)
+$form.Controls.Add($StatusLabel)
 
 # Add a progress bar
 $progressBar = New-Object System.Windows.Forms.ProgressBar
@@ -51,7 +53,7 @@ $userTextBox.Location = New-Object System.Drawing.Point(180, 95)
 $userTextBox.Size = New-Object System.Drawing.Size(350, 60)
 $userTextBox.Font = New-Object System.Drawing.Font("Arial", 20, [System.Drawing.FontStyle]::Regular)
 $form.Controls.Add($userTextBox)
- $username = $userTextBox.Text
+$username = $userTextBox.Text
 
 # Create a drop-down menu (combo box)
 $comboBox = New-Object System.Windows.Forms.ComboBox
@@ -96,9 +98,20 @@ foreach ($index in 0..($checkboxOptions.Count - 1)) {
     $startY += 23  # Increment Y position for the next checkbox
 }
 
-# Add this after creating the checkboxes
-$checkboxO365Groups = $checkboxes[1]  # Assuming "Retrieve O365 groups" is the second checkbox
-# Modify the button click event
+# Create a function mapping that asscoiates the function with the checkbox name
+$functionMap = @{
+    "BBB" = @{
+        "Retrieve O365 groups" = { Get-BBBUserGroupsExport -username $username }
+        "Retrieve Distribution lists" = { Get-BBBUserDLExport -username $username }
+        "Retrieve Shared Mailboxes" = { Get-BBBSharedMailbox -username $username }
+    }
+    "SULCO" = @{
+        "Retrieve O365 groups" = { Get-SulcoUserGroupsExport -username $username }
+        "Retrieve Distribution lists" = { Get-SulcoUserDLExport -username $username }
+        "Retrieve Shared Mailboxes" = { Get-SulcoMailbox -username $username }
+    }
+}
+
 # Create a button to fetch user groups
 $button = New-Object System.Windows.Forms.Button
 $button.Location = New-Object System.Drawing.Point(60, 180)
@@ -106,31 +119,24 @@ $button.Size = New-Object System.Drawing.Size(180, 40)
 $button.Text = "Run"
 $button.Add_Click({
     $username = $userTextBox.Text
+    $selectedDomain = $comboBox.SelectedItem
+    $selectedFunctions = $functionMap[$selectedDomain]
 
-    if ($comboBox.SelectedItem -eq "BBB") {
-        if ($checkboxO365Groups.Checked) {
+    foreach ($index in 1..($checkboxes.Count - 1)) {
+        if ($checkboxes[$index].Checked) {
+            $checkboxText = $checkboxes[$index].Text
             try {
-                Get-BBBUserGroupsExport -username $username
-                $largeTextBox.AppendText("O365 groups exported for BBB user: $username`r`n")
+                $selectedFunctions[$checkboxText].Invoke()
+                $largeTextBox.AppendText("$checkboxText for $selectedDomain user: $username completed successfully.`r`n")
             } catch {
-                $largeTextBox.AppendText("Error exporting O365 groups for BBB user: $username. Error: $($_.Exception.Message)`r`n")
-            }
-        }
-    } elseif ($comboBox.SelectedItem -eq "SULCO") {
-        if ($checkboxO365Groups.Checked) {
-            try {
-                Get-SulcoUserGroupsExport -username $username
-                $largeTextBox.AppendText("O365 groups exported for SULCO user: $username`r`n")
-            } catch {
-                $largeTextBox.AppendText("Error exporting O365 groups for SULCO user: $username. Error: $($_.Exception.Message)`r`n")
+                $largeTextBox.AppendText("Error during $checkboxText for $selectedDomain user: $username. Error: $($_.Exception.Message)`r`n")
             }
         }
     }
 
-    # Update progress
-    $progressBar.Value += 25
-    $label.Text = "Status: O365 Groups Export Complete"
+    $statusLabel.Text = "Status: Process Completed"
 })
+
 $form.Controls.Add($button)
 
 # Add a KeyPress event to prevent spaces
@@ -153,4 +159,3 @@ $form.Controls.Add($largeTextBox)
 
 # Show the form
 $form.ShowDialog()
-

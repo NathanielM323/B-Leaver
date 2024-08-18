@@ -1,6 +1,6 @@
 ﻿[System.Threading.Thread]::CurrentThread.ApartmentState = "STA"
 #Install-Module AzureAD
-connect-exchangeonline
+#connect-exchangeonline
 try {Get-AzureADCurrentSessionInfo}
 
 catch [Microsoft.Open.Azure.AD.CommonLibrary.AadNeedAuthenticationException]
@@ -8,41 +8,43 @@ catch [Microsoft.Open.Azure.AD.CommonLibrary.AadNeedAuthenticationException]
 Connect-AzureAD
 }
 #function to retrieve BBB users 
-    function Get-BBBUserGroupsExport
-    {
+  function Get-BBBUserGroupsExport {
     param ([String]$username)
-    #retrieves groups from AAD
-    $accountName = Get-ADUser -Filter {SamAccountname -eq $username} 
-     
-    try{$membership = Get-AzureADUserMembership -ObjectId $accountName.UserPrincipalName | Where-Object {$_.ObjectType -eq "Group"} | Select-Object DisplayName
+    # Retrieves groups from AAD
+    $accountName = Get-ADUser -Filter {SamAccountname -eq $username}
 
-    #Sort membership by alphabetical order
-    $membership = $membership |Sort-Object DisplayName
+    try {
+        if ($null -eq $accountName) {
+            throw "The username '$username' is invalid or does not exist."
+        }
+
+        $membership = Get-AzureADUserMembership -ObjectId $accountName.UserPrincipalName | Where-Object {$_.ObjectType -eq "Group"} | Select-Object DisplayName
+
+        # Sort membership by alphabetical order
+        $membership = $membership | Sort-Object DisplayName
+
         # Create Directory to save
         $directoryPath = "\\cfel.local\dfsroot\group\ICT\Nathaniel\Leaver\Leaver Automation\B-Leaver\Leaver Data\$username"
         if (-not (Test-Path -Path $directoryPath)) {
             New-Item -Path $directoryPath -ItemType "directory" | Out-Null
         }
-    
+
         # Define CSV file path with the username in the filename
         $csvFilePath = "$directoryPath\($username) Group memberships.csv"
-
         $membership | Export-Csv -Path $csvFilePath -NoTypeInformation
-        #[System.Windows.Forms.MessageBox]::Show("Group memberships exported as CSV to $directoryPath successfully.", "Export Complete")
+
+        [System.Windows.Forms.MessageBox]::Show("Group memberships exported as CSV to $directoryPath successfully.", "Export Complete")
+        return $true  # Username is valid and operation succeeded
+    } catch {
+        if ($_.Exception.Message -like "*invalid or does not exist*") {
+            [System.Windows.Forms.MessageBox]::Show($_.Exception.Message, "ERROR_INVALID_USERNAME_012")
+        }
+        return $false  # Username is invalid
     }
-      
-      catch [Microsoft.Open.Azure.AD.CommonLibrary.AadNeedAuthenticationException] {
-    [System.Windows.Forms.MessageBox]::Show("You must connect to AzureAD/Identity before calling Azure commands", "ERROR_AZURE_AUTHENTICATION_REQUIRED_101")
 }
-      catch {
-        if ($_.Exception.Message -like "*Cannot bind argument to parameter 'ObjectId' because it is null.*") {
-            [System.Windows.Forms.MessageBox]::Show("The username '$username' is invalid or does not exist.", "ERROR_INVALID_USERNAME_012")
-        }
-        else {
-            #[System.Windows.Forms.MessageBox]::Show("An error occurred: $($_.Exception.Message)", "Error")
-        }
-}
-}
+
+
+
     function Get-SulcoUserGroupsExport
     {
     param ([String]$username)
@@ -61,16 +63,20 @@ Connect-AzureAD
         $csvFilePath = "$directoryPath\($username) Group memberships.csv"
 
         $membership | Export-Csv -Path $csvFilePath -NoTypeInformation
-        #[System.Windows.Forms.MessageBox]::Show("Group memberships exported as CSV to $directoryPath successfully.", "Export Complete")
+        [System.Windows.Forms.MessageBox]::Show("Group memberships exported as CSV to $directoryPath successfully.", "Export Complete")
+
+         return $true  # Username is valid and operation succeeded
     }
       
       catch [Microsoft.Open.Azure.AD.CommonLibrary.AadNeedAuthenticationException] {
     [System.Windows.Forms.MessageBox]::Show("You must connect to AzureAD/Identity before calling Azure commands", "ERROR_AZURE_AUTHENTICATION_REQUIRED_101")
+
 }
 
       catch {
         if ($_.Exception.Message -like "*Cannot bind argument to parameter 'ObjectId' because it is null.*") {
             [System.Windows.Forms.MessageBox]::Show("The username '$username' is invalid or does not exist.", "ERROR_INVALID_USERNAME_012")
+             return $false  # Username is invalid
         }
         else {
             #[System.Windows.Forms.MessageBox]::Show("An error occurred: $($_.Exception.Message)", "Error")

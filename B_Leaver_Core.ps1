@@ -101,14 +101,14 @@ foreach ($index in 0..($checkboxOptions.Count - 1)) {
 # Create a function mapping that asscoiates the function with the checkbox name
 $functionMap = @{
     "BBB" = @{
-        "Retrieve O365 groups" = { Get-BBBUserGroupsExport -username $username }
-        "Retrieve Distribution lists" = { Get-BBBUserDLExport -username $username }
-        "Retrieve Shared Mailboxes" = { Get-BBBSharedMailbox -username $username }
+        "Retrieve O365 groups" = { param($username, $progressBar, $statusLabel) Get-BBBUserGroupsExport -username $username -progressBar $progressBar -statusLabel $statusLabel }
+        "Retrieve Distribution lists" = { param($username, $progressBar, $statusLabel) Get-BBBUserDLExport -username $username -progressBar $progressBar -statusLabel $statusLabel }
+        "Retrieve Shared Mailboxes" = { param($username, $progressBar, $statusLabel) Get-BBBSharedMailbox -username $username -progressBar $progressBar -statusLabel $statusLabel }
     }
     "SULCO" = @{
-        "Retrieve O365 groups" = { Get-SulcoUserGroupsExport -username $username }
-        "Retrieve Distribution lists" = { Get-SulcoUserDLExport -username $username }
-        "Retrieve Shared Mailboxes" = { Get-SulcoMailbox -username $username }
+        "Retrieve O365 groups" = { param($username, $progressBar, $statusLabel) Get-SulcoUserGroupsExport -username $username -progressBar $progressBar -statusLabel $statusLabel }
+        "Retrieve Distribution lists" = { param($username, $progressBar, $statusLabel) Get-SulcoUserDLExport -username $username -progressBar $progressBar -statusLabel $statusLabel }
+        "Retrieve Shared Mailboxes" = { param($username, $progressBar, $statusLabel) Get-SulcoMailbox -username $username -progressBar $progressBar -statusLabel $statusLabel }
     }
 }
 
@@ -126,7 +126,8 @@ $button.Add_Click({
         if ($checkboxes[$index].Checked) {
             $checkboxText = $checkboxes[$index].Text
             try {
-                $selectedFunctions[$checkboxText].Invoke()
+                # Invoke the function with username, progressBar, and statusLabel as parameters
+                $selectedFunctions[$checkboxText].Invoke($username, $progressBar, $statusLabel)
                 $largeTextBox.AppendText("$checkboxText for $selectedDomain user: $username completed successfully.`r`n")
             } catch {
                 $largeTextBox.AppendText("Error during $checkboxText for $selectedDomain user: $username. Error: $($_.Exception.Message)`r`n")
@@ -136,6 +137,9 @@ $button.Add_Click({
 
     $statusLabel.Text = "Status: Process Completed"
 })
+
+
+
 
 $form.Controls.Add($button)
 

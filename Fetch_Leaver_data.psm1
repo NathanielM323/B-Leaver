@@ -1,6 +1,6 @@
 ﻿[System.Threading.Thread]::CurrentThread.ApartmentState = "STA"
 #Install-Module AzureAD
-#connect-exchangeonline
+connect-exchangeonline
 try {Get-AzureADCurrentSessionInfo}
 
 catch [Microsoft.Open.Azure.AD.CommonLibrary.AadNeedAuthenticationException]
@@ -84,66 +84,72 @@ Connect-AzureAD
         }
     }
 
-    function Get-BBBUserDLExport
-    {
-       param ([String]$username)
-       $accountName = Get-ADUser -Filter {SamAccountname -eq $username} -Properties EmailAddress
-       $BBBaddress = $accountName.EmailAddress
+  function Get-BBBUserDLExport {
+    param (
+        [String]$username,
+        [System.Windows.Forms.ProgressBar]$progressBar,
+        [System.Windows.Forms.Label]$statusLabel  # Added the status label as a parameter
+    )
 
-        try {
-            $allDistributionGroups = Get-DistributionGroup -ResultSize Unlimited
-            $totalDLs = $allDistributionGroups.Count
-            $progress = 0
-            # Array to store DLs user has access to
-            $DLswithAccess = @()
-            # Loop through each DL to see if user has access
-            foreach ($DL in $allDistributionGroups) {
-                $members = Get-DistributionGroupMember -Identity $DL.Identity
-                if ($members.PrimarySmtpAddress -contains $BBBaddress) {
-                    $DLswithAccess += $DL.PrimarySmtpAddress
-                }
-                $progress++
-                Write-Progress -Activity "Checking Distribution Groups" -Status "$progress out of $totalDLs" -PercentComplete (($progress / $totalDLs) * 100)
-            }
-            $directoryPath = "\\cfel.local\dfsroot\group\ICT\Nathaniel\Leaver\Leaver Automation\B-Leaver\Leaver Data\$username"
-            if (-not (Test-Path -Path $directoryPath)) {
-                New-Item -Path $directoryPath -ItemType "directory" | Out-Null
-            }
+    $accountName = Get-ADUser -Filter {SamAccountname -eq $username} -Properties EmailAddress
+    $BBBaddress = $accountName.EmailAddress
 
-            # Define CSV file path with the username in the filename
-            $csvFilePath = "$directoryPath\($username) Distribution_Lists.csv"
-    
-            # Create a custom object for each distribution list
-            $DLObjects = $DLswithAccess | ForEach-Object {
-                [PSCustomObject]@{
-                    DistributionList = $_
-                }
+    try {
+        $statusLabel.Text = "Status: Fetching Distribution Lists for $username..."
+        $allDistributionGroups = Get-DistributionGroup -ResultSize Unlimited
+        $totalDLs = $allDistributionGroups.Count
+        $progress = 0
+
+        # Array to store DLs user has access to
+        $DLswithAccess = @()
+
+        # Loop through each DL to see if user has access
+        foreach ($DL in $allDistributionGroups) {
+            $members = Get-DistributionGroupMember -Identity $DL.Identity
+            if ($members.PrimarySmtpAddress -contains $BBBaddress) {
+                $DLswithAccess += $DL.PrimarySmtpAddress
             }
-    
-            # Export the custom objects to CSV
-            $DLObjects | Export-Csv -Path $csvFilePath -NoTypeInformation
-    
-            #[System.Windows.Forms.MessageBox]::Show("Group memberships exported as CSV to $directoryPath successfully.", "Export Complete")
+            $progress++
+
+            # Update progress bar
+            $percentComplete = ($progress / $totalDLs) * 100
+            $progressBar.Value = [math]::Round($percentComplete)
+
+            # Optionally update status with progress
+            $statusLabel.Text = "Status: Fetching Distribution Lists - $progress out of $totalDLs..."
         }
 
-         catch [System.Management.Automation.CommandNotFoundException] 
-    
-            {
-                if ($_.Exception.CommandName -eq 'Get-DistributionGroup') {
-                    Write-Error "The Exchange Online PowerShell module is not loaded or not connected. Please ensure you've connected to Exchange Online before running this script."
-                    [System.Windows.Forms.MessageBox]::Show("You must connect to MSExchange Online", "ERROR_MSE_AUTHENTICATION_REQUIRED_113")
-                    # Optionally, you can try to connect to Exchange Online here
-                    # Connect-ExchangeOnline
-                }
-                else {
-                    # Re-throw if it's a different CommandNotFoundException
-                    throw
-                }
+        $directoryPath = "\\cfel.local\dfsroot\group\ICT\Nathaniel\Leaver\Leaver Automation\B-Leaver\Leaver Data\$username"
+        if (-not (Test-Path -Path $directoryPath)) {
+            New-Item -Path $directoryPath -ItemType "directory" | Out-Null
         }
-        catch {
-            [System.Windows.Forms.MessageBox]::Show("Error occurred: $($_.Exception.Message)", "Error")
+
+        # Define CSV file path with the username in the filename
+        $csvFilePath = "$directoryPath\($username) Distribution_Lists.csv"
+
+        # Create a custom object for each distribution list
+        $DLObjects = $DLswithAccess | ForEach-Object {
+            [PSCustomObject]@{
+                DistributionList = $_
+            }
         }
+
+        # Export the custom objects to CSV
+        $DLObjects | Export-Csv -Path $csvFilePath -NoTypeInformation
+    } catch [System.Management.Automation.CommandNotFoundException] {
+        if ($_.Exception.CommandName -eq 'Get-DistributionGroup') {
+            Write-Error "The Exchange Online PowerShell module is not loaded or not connected. Please ensure you've connected to Exchange Online before running this script."
+        } else {
+            throw
+        }
+    } finally {
+        $statusLabel.Text = "Status: Completed fetching Distribution Lists for $username."
     }
+}
+ #catch {
+       # [System.Windows.Forms.MessageBox]::Show("Error occurred: $($_.Exception.Message)", "Error")
+    #}
+
    
     function Get-SulcoUserDLExport
     {

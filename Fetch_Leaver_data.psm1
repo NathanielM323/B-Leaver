@@ -151,72 +151,89 @@ Connect-AzureAD
     #}
 
    
-    function Get-SulcoUserDLExport
-    {
-     param ([String]$username)
-     $sulcoAddress = "$username@startuploans.co.uk"
- 
-           try {
-                $allDistributionGroups = Get-DistributionGroup -ResultSize Unlimited
-                $totalDLs = $allDistributionGroups.Count
-                $progress = 0
-                # Array to store DLs user has access to
-                $DLswithAccess = @()
-                # Loop through each DL to see if user has access
-                foreach ($DL in $allDistributionGroups) {
-                    $members = Get-DistributionGroupMember -Identity $DL.Identity
-                    if ($members.PrimarySmtpAddress -contains $sulcoAddress) {
-                        $DLswithAccess += $DL.PrimarySmtpAddress
-                    }
-                    $progress++
-                    Write-Progress -Activity "Checking Distribution Groups" -Status "$progress out of $totalDLs" -PercentComplete (($progress / $totalDLs) * 100)
-                }
-                $directoryPath = "\\cfel.local\dfsroot\group\ICT\Nathaniel\Leaver\Leaver Automation\B-Leaver\Leaver Data\$username"
-                if (-not (Test-Path -Path $directoryPath)) {
-                    New-Item -Path $directoryPath -ItemType "directory" | Out-Null
-                }
+function Get-SulcoUserDLExport {
+    param (
+        [String]$username,
+        [System.Windows.Forms.ProgressBar]$progressBar,
+        [System.Windows.Forms.Label]$statusLabel
+    )
 
-                # Define CSV file path with the username in the filename
-                $csvFilePath = "$directoryPath\($username) Distribution_Lists.csv"
-    
-                # Create a custom object for each distribution list
-                $DLObjects = $DLswithAccess | ForEach-Object {
-                    [PSCustomObject]@{
-                        DistributionList = $_
-                    }
-                }
-    
-                # Export the custom objects to CSV
-                $DLObjects | Export-Csv -Path $csvFilePath -NoTypeInformation
-    
-                #[System.Windows.Forms.MessageBox]::Show("Group memberships exported as CSV to $directoryPath successfully.", "Export Complete")
+    $sulcoAddress = "$username@startuploans.co.uk"
+
+    try {
+        # Update status label before starting
+        $statusLabel.Text = "Status: Fetching Distribution Lists for $username..."
+        
+        $allDistributionGroups = Get-DistributionGroup -ResultSize Unlimited
+        $totalDLs = $allDistributionGroups.Count
+        $progress = 0
+
+        # Array to store DLs user has access to
+        $DLswithAccess = @()
+
+        # Loop through each DL to see if user has access
+        foreach ($DL in $allDistributionGroups) {
+            $members = Get-DistributionGroupMember -Identity $DL.Identity
+            if ($members.PrimarySmtpAddress -contains $sulcoAddress) {
+                $DLswithAccess += $DL.PrimarySmtpAddress
             }
+            $progress++
 
- catch [System.Management.Automation.CommandNotFoundException]    
-    {
+            # Update progress bar
+            $percentComplete = ($progress / $totalDLs) * 100
+            $progressBar.Value = [math]::Round($percentComplete)
+
+            # Optionally update status with progress
+            $statusLabel.Text = "Status: Fetching Distribution Lists - $progress out of $totalDLs..."
+        }
+
+        $directoryPath = "\\cfel.local\dfsroot\group\ICT\Nathaniel\Leaver\Leaver Automation\B-Leaver\Leaver Data\$username"
+        if (-not (Test-Path -Path $directoryPath)) {
+            New-Item -Path $directoryPath -ItemType "directory" | Out-Null
+        }
+
+        # Define CSV file path with the username in the filename
+        $csvFilePath = "$directoryPath\($username) Distribution_Lists.csv"
+
+        # Create a custom object for each distribution list
+        $DLObjects = $DLswithAccess | ForEach-Object {
+            [PSCustomObject]@{
+                DistributionList = $_
+            }
+        }
+
+        # Export the custom objects to CSV
+        $DLObjects | Export-Csv -Path $csvFilePath -NoTypeInformation
+
+    } catch [System.Management.Automation.CommandNotFoundException] {
         if ($_.Exception.CommandName -eq 'Get-DistributionGroup') {
             Write-Error "The Exchange Online PowerShell module is not loaded or not connected. Please ensure you've connected to Exchange Online before running this script."
-            # Optionally, you can try to connect to Exchange Online here
-            # Connect-ExchangeOnline
-        }
-        else {
-            # Re-throw if it's a different CommandNotFoundException
+        } else {
             throw
         }
-}
-catch {
-    [System.Windows.Forms.MessageBox]::Show("Error occurred: $($_.Exception.Message)", "Error")
-}
-
+    } catch {
+        [System.Windows.Forms.MessageBox]::Show("Error occurred: $($_.Exception.Message)", "Error")
+    } finally {
+        # Update status label after completion
+        $statusLabel.Text = "Status: Completed fetching Distribution Lists for $username."
     }
+}
 
-    function Get-BBBSharedMailbox {
-    param ([String]$username)
+
+   function Get-BBBSharedMailbox {
+    param (
+        [String]$username,
+        [System.Windows.Forms.ProgressBar]$progressBar,
+        [System.Windows.Forms.Label]$statusLabel
+    )
+
     $accountName = Get-ADUser -Filter {SamAccountname -eq $username} -Properties EmailAddress
     $BBBaddress = $accountName.EmailAddress
 
-    
     try {
+        # Update status label before starting
+        $statusLabel.Text = "Status: Fetching Shared Mailbox Permissions for $username..."
+
         # Get all mailboxes
         $AllMailboxes = Get-Mailbox -ResultSize Unlimited
         $totalMailboxes = $AllMailboxes.Count
@@ -227,7 +244,7 @@ catch {
 
         # Loop through each mailbox and check if the user has access
         foreach ($Mailbox in $AllMailboxes) {
-            $MailboxPermissions = Get-MailboxPermission -Identity $Mailbox.DistinguishedName | Where-Object { $_.User -like $BBBeaddress -and $_.AccessRights -like "FullAccess" }
+            $MailboxPermissions = Get-MailboxPermission -Identity $Mailbox.DistinguishedName | Where-Object { $_.User -like $BBBaddress -and $_.AccessRights -like "FullAccess" }
             if ($MailboxPermissions) {
                 $MailboxesWithAccess += $Mailbox
             }
@@ -235,7 +252,10 @@ catch {
             # Update progress
             $progress++
             $percentComplete = ($progress / $totalMailboxes) * 100
-            Write-Progress -Activity "Checking Mailbox Permissions" -Status "Progress: $percentComplete% Complete" -PercentComplete $percentComplete
+            $progressBar.Value = [math]::Round($percentComplete)
+
+            # Optionally update status with progress
+            $statusLabel.Text = "Status: Checking Mailbox Permissions - $progress out of $totalMailboxes..."
         }
 
         # Create Directory to save
@@ -249,11 +269,15 @@ catch {
 
         # Export mailboxes to CSV
         $MailboxesWithAccess | Export-Csv -Path $csvFilePath -NoTypeInformation
-        #[System.Windows.Forms.MessageBox]::Show("Shared mailboxes exported as CSV to $directoryPath successfully.", "Export Complete")
-        } catch {
-        [System.Windows.Forms.MessageBox]::Show("Error occurred.", "Error")
-            }
+
+    } catch {
+        [System.Windows.Forms.MessageBox]::Show("Error occurred: $($_.Exception.Message)", "Error")
+    } finally {
+        # Update status label after completion
+        $statusLabel.Text = "Status: Completed fetching Shared Mailbox Permissions for $username."
     }
+}
+
     # Uncomment the below line if you want to display the mailboxes in the console
     # $MailboxesWithAccess | Select-Object DisplayName, UserPrincipalName | Out-Host
      

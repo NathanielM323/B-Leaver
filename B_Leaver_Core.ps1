@@ -135,7 +135,7 @@ $button.Add_Click({
         }
     }
 
-    $statusLabel.Text = "Status: Process Completed"
+    $statusLabel.Text = "Status:Leaver Process Completed"
 })
 
 

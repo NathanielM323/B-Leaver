@@ -98,6 +98,22 @@ foreach ($index in 0..($checkboxOptions.Count - 1)) {
     $startY += 23  # Increment Y position for the next checkbox
 }
 
+# Add event handler for "Retrieve all leaver data" checkbox
+$checkboxes[0].Add_CheckedChanged({
+    if ($checkboxes[0].Checked) {
+        # Check all other checkboxes
+        foreach ($i in 1..($checkboxOptions.Count - 1)) {
+            $checkboxes[$i].Checked = $true
+        }
+    } else {
+        # Uncheck all other checkboxes
+        foreach ($i in 1..($checkboxOptions.Count - 1)) {
+            $checkboxes[$i].Checked = $false
+        }
+    }
+})
+
+
 # Create a function mapping that asscoiates the function with the checkbox name
 $functionMap = @{
     "BBB" = @{

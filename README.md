@@ -1,5 +1,7 @@
 User accounts to test on:
 
--George Elysee
--Parthiban Subramaniam
--Sarah de Rancourt
+-George Elysee <br>
+-Parthiban Subramaniam <br>
+-Sarah de Rancourt <br>
+-Owen Mark <br>
+-Shanina McLeod <br> 

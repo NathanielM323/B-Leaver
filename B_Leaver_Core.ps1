@@ -3,10 +3,16 @@
 $currentDirectory = Get-Location
 $modulePath = Join-Path $currentDirectory "Fetch_Leaver_data.psm1"
 
-# Import the module using the path
+# Import 'Fetch_LEaver_data' using the module using the path
 Import-Module $modulePath -Force
-
 Get-Module -Name Fetch_Leaver_data
+
+# Import 'Hide_From_GAL' using the module using the path
+$modulePath = Join-Path $currentDirectory "Hide_From_GAL.psm1"
+Import-Module $modulePath -Force
+Get-Module -Name Hide_From_GAL
+
+
 
 #--------------------------------------------------------
 
@@ -30,7 +36,7 @@ $form.StartPosition = "CenterScreen"
 $StatusLabel = New-Object System.Windows.Forms.Label
 $StatusLabel.Text = "Status: Idle"
 $StatusLabel.AutoSize = $true
-$StatusLabel.Location = New-Object System.Drawing.Point(50, 460)
+$StatusLabel.Location = New-Object System.Drawing.Point(50, 440)
 $form.Controls.Add($StatusLabel)
 
 # Add a progress bar
@@ -74,7 +80,7 @@ $Dropdownlabel.Text = "Domain:"
 $form.Controls.Add($Dropdownlabel)
 
 # Add checkboxes
-$checkboxOptions = @("Retrieve all leaver data", "Retrieve O365 groups", "Retrieve Distribution lists", "Retrieve Shared Mailboxes")
+$checkboxOptions = @("Retrieve all leaver data", "Retrieve O365 groups", "Retrieve Distribution lists", "Retrieve Shared Mailboxes" , "Hide from GAL")
 $checkboxes = @()
 $startY = 160  # Starting Y position for the first checkbox
 $indent = 23   # Indentation for sub-options
@@ -83,13 +89,14 @@ foreach ($index in 0..($checkboxOptions.Count - 1)) {
     $checkbox = New-Object System.Windows.Forms.CheckBox
     $checkbox.Text = $checkboxOptions[$index]
     
-    if ($index -eq 0) {
-        # First option (Option 1) is not indented
+    if ($index -notin 1, 2, 3) {
+        # Position for non-indented checkboxes
         $checkbox.Location = New-Object System.Drawing.Point(180, $startY)
     } else {
-        # Other options are indented
+        # Position for indented checkboxes
         $checkbox.Location = New-Object System.Drawing.Point((180 + $indent), $startY)
     }
+
     
     $checkbox.Size = New-Object System.Drawing.Size(200, 20)
     $checkbox.Font = New-Object System.Drawing.Font("Arial", 11, [System.Drawing.FontStyle]::Regular)
@@ -120,11 +127,13 @@ $functionMap = @{
         "Retrieve O365 groups" = { param($username, $progressBar, $statusLabel) Get-BBBUserGroupsExport -username $username -progressBar $progressBar -statusLabel $statusLabel }
         "Retrieve Distribution lists" = { param($username, $progressBar, $statusLabel) Get-BBBUserDLExport -username $username -progressBar $progressBar -statusLabel $statusLabel }
         "Retrieve Shared Mailboxes" = { param($username, $progressBar, $statusLabel) Get-BBBSharedMailbox -username $username -progressBar $progressBar -statusLabel $statusLabel }
+        "Hide from GAL" = {param($username) GALHideBBB -username $username}
     }
     "SULCO" = @{
         "Retrieve O365 groups" = { param($username, $progressBar, $statusLabel) Get-SulcoUserGroupsExport -username $username -progressBar $progressBar -statusLabel $statusLabel }
         "Retrieve Distribution lists" = { param($username, $progressBar, $statusLabel) Get-SulcoUserDLExport -username $username -progressBar $progressBar -statusLabel $statusLabel }
         "Retrieve Shared Mailboxes" = { param($username, $progressBar, $statusLabel) Get-SulcoMailbox -username $username -progressBar $progressBar -statusLabel $statusLabel }
+        "Hide from GAL" = {param($username) GALHideSULCO -username $username}
     }
 }
 
@@ -141,18 +150,31 @@ $button.Add_Click({
     foreach ($index in 1..($checkboxes.Count - 1)) {
         if ($checkboxes[$index].Checked) {
             $checkboxText = $checkboxes[$index].Text
+            $operationSuccess = $false  # Initialize a flag for operation success
+
             try {
                 # Invoke the function with username, progressBar, and statusLabel as parameters
-                $selectedFunctions[$checkboxText].Invoke($username, $progressBar, $statusLabel)
-                $largeTextBox.AppendText("$checkboxText for $selectedDomain user: $username completed successfully.`r`n")
+                $operationSuccess = $selectedFunctions[$checkboxText].Invoke($username, $progressBar, $statusLabel)
+                Write-Host "Operation success for $checkboxText $operationSuccess"
             } catch {
+                # Log the error in the main text box
                 $largeTextBox.AppendText("Error during $checkboxText for $selectedDomain user: $username. Error: $($_.Exception.Message)`r`n")
+                Write-Host "Error during $checkboxText $($_.Exception.Message)"
+            }
+
+            if ($operationSuccess) {
+                # Only append success message if the operation succeeded
+                $largeTextBox.AppendText("$checkboxText for $selectedDomain user: $username completed successfully.`r`n")
             }
         }
     }
 
-    $statusLabel.Text = "Status:Leaver Process Completed"
+    $statusLabel.Text = "Status: Leaver Process Completed"
 })
+
+
+
+
 
 
 

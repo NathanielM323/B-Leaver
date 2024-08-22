@@ -175,10 +175,6 @@ $button.Add_Click({
 
 
 
-
-
-
-
 $form.Controls.Add($button)
 
 # Add a KeyPress event to prevent spaces

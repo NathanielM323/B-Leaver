@@ -3,7 +3,7 @@
 $currentDirectory = Get-Location
 $modulePath = Join-Path $currentDirectory "Fetch_Leaver_data.psm1"
 
-# Import 'Fetch_LEaver_data' using the module using the path
+# Import 'Fetch_Leaver_data' using the module using the path
 Import-Module $modulePath -Force
 Get-Module -Name Fetch_Leaver_data
 
@@ -12,6 +12,10 @@ $modulePath = Join-Path $currentDirectory "Hide_From_GAL.psm1"
 Import-Module $modulePath -Force
 Get-Module -Name Hide_From_GAL
 
+# Import 'Disable_AD_account' using the module using the path
+$modulePath = Join-Path $currentDirectory "Disable_AD_account.psm1"
+Import-Module $modulePath -Force
+Get-Module -Name Disable_AD_Account
 
 
 #--------------------------------------------------------
@@ -80,7 +84,7 @@ $Dropdownlabel.Text = "Domain:"
 $form.Controls.Add($Dropdownlabel)
 
 # Add checkboxes
-$checkboxOptions = @("Retrieve all leaver data", "Retrieve O365 groups", "Retrieve Distribution lists", "Retrieve Shared Mailboxes" , "Hide from GAL")
+$checkboxOptions = @("Retrieve all leaver data", "Retrieve O365 groups", "Retrieve Distribution lists", "Retrieve Shared Mailboxes" , "Hide from GAL" , "Disable AD Account")
 $checkboxes = @()
 $startY = 160  # Starting Y position for the first checkbox
 $indent = 23   # Indentation for sub-options
@@ -128,12 +132,14 @@ $functionMap = @{
         "Retrieve Distribution lists" = { param($username, $progressBar, $statusLabel) Get-BBBUserDLExport -username $username -progressBar $progressBar -statusLabel $statusLabel }
         "Retrieve Shared Mailboxes" = { param($username, $progressBar, $statusLabel) Get-BBBSharedMailbox -username $username -progressBar $progressBar -statusLabel $statusLabel }
         "Hide from GAL" = {param($username) GALHideBBB -username $username}
+        "Disable AD Account" = {param($username, $progressBar, $statusLabel) BBBDisable-ADAccount -username $username -progressBar $progressBar -statusLabel $statusLabel}
     }
     "SULCO" = @{
         "Retrieve O365 groups" = { param($username, $progressBar, $statusLabel) Get-SulcoUserGroupsExport -username $username -progressBar $progressBar -statusLabel $statusLabel }
         "Retrieve Distribution lists" = { param($username, $progressBar, $statusLabel) Get-SulcoUserDLExport -username $username -progressBar $progressBar -statusLabel $statusLabel }
         "Retrieve Shared Mailboxes" = { param($username, $progressBar, $statusLabel) Get-SulcoMailbox -username $username -progressBar $progressBar -statusLabel $statusLabel }
         "Hide from GAL" = {param($username) GALHideSULCO -username $username}
+        "Disable AD Account" = {param($username, $progressBar, $statusLabel) SULCODisable-ADAccount -username $username -progressBar $progressBar -statusLabel $statusLabel}
     }
 }
 

@@ -12,6 +12,12 @@
         if ($user.msExchHideFromAddressLists -eq $true) {
             Write-Host "$username is hidden from address lists."
             $operationSuccess = $true  # Set the flag to true if the operation succeeds
+            
+            # Logging to CSV
+            $logPath = "\\cfel.local\dfsroot\group\ICT\Nathaniel\Leaver\Leaver Automation\Logs\TestLog.csv"
+            $logEntry = "$username,Hiddren from GAL,$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+            Add-Content -Path $logPath -Value $logEntry
+
         } else {
             throw "Failed to hide $username from the Global Address List."
         }
@@ -43,6 +49,12 @@ $domainController = "startuploans.local"
     if ($user.msExchHideFromAddressLists -eq $true) {
          Write-Host "$username is hidden from address lists."
          $operationSuccess = $true  # Set the flag to true if the operation succeeds
+
+         # Logging to CSV
+         $logPath = "\\cfel.local\dfsroot\group\ICT\Nathaniel\Leaver\Leaver Automation\Logs\TestLog.csv"
+         $logEntry = "$username,Hiddren from GAL,$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+         Add-Content -Path $logPath -Value $logEntry
+
     } else {
          throw "Failed to hide $username from the Global Address List."
     }

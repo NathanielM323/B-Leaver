@@ -27,7 +27,6 @@
 
     # Wait for AD replication
     Start-Sleep -Seconds 5
-    return $operationSuccess
 
     # Retrieve the account status
     try {
@@ -52,7 +51,7 @@
     Add-Content -Path $logPath -Value $logEntry
 
     Start-Sleep -Seconds 5
-
+    return $operationSuccess
 }
 
 function SULCODisable-ADAccount {
@@ -85,7 +84,6 @@ $domainController = "startuploans.local"
 
     # Wait for AD replication
     Start-Sleep -Seconds 5
-    return $operationSuccess
 
     # Retrieve the account status
     try {
@@ -110,5 +108,6 @@ $domainController = "startuploans.local"
     Add-Content -Path $logPath -Value $logEntry
 
     Start-Sleep -Seconds 5
+    return $operationSuccess
 
 }

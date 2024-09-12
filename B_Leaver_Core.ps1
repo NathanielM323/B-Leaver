@@ -17,6 +17,10 @@ $modulePath = Join-Path $currentDirectory "Disable_AD_account.psm1"
 Import-Module $modulePath -Force
 Get-Module -Name Disable_AD_Account
 
+$modulePath = Join-Path $currentDirectory "OOO_Reply.psm1"
+Import-Module $modulePath -Force
+Get-Module -Name OOO_Reply
+
 
 #--------------------------------------------------------
 
@@ -32,7 +36,7 @@ Add-Type -AssemblyName System.Windows.Forms
 
 # Create the form
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "Leaver Process Automation"
+$form.Text = "BLeaver"
 $form.Size = New-Object System.Drawing.Size(1200, 1200)
 $form.StartPosition = "CenterScreen"
 
@@ -84,7 +88,8 @@ $Dropdownlabel.Text = "Domain:"
 $form.Controls.Add($Dropdownlabel)
 
 # Add checkboxes
-$checkboxOptions = @("Retrieve all leaver data", "Retrieve O365 groups", "Retrieve Distribution lists", "Retrieve Shared Mailboxes" , "Hide from GAL" , "Disable AD Account")
+$checkboxOptions = @("Retrieve all leaver data", "Retrieve O365 groups", "Retrieve Distribution lists", "Retrieve Shared Mailboxes" , "Hide from GAL" , "Disable AD Account", 
+                    "Enable OOO Reply", "Remove AD groups")
 $checkboxes = @()
 $startY = 160  # Starting Y position for the first checkbox
 $indent = 23   # Indentation for sub-options
@@ -133,6 +138,8 @@ $functionMap = @{
         "Retrieve Shared Mailboxes" = { param($username, $progressBar, $statusLabel) Get-BBBSharedMailbox -username $username -progressBar $progressBar -statusLabel $statusLabel }
         "Hide from GAL" = {param($username) GALHideBBB -username $username}
         "Disable AD Account" = {param($username, $progressBar, $statusLabel) BBBDisable-ADAccount -username $username -progressBar $progressBar -statusLabel $statusLabel}
+        "Enable OOO Reply" = {param($username, $progressBar, $statusLabel) BBB-OOO -username $username -progressBar $progressBar -statusLabel $statusLabel}
+        "Remove AD groups" = {param($username, $progressBar, $statusLabel) BBB-RemoveADGroups -username $username -progressBar $progressBar -statusLabel $statusLabel}
     }
     "SULCO" = @{
         "Retrieve O365 groups" = { param($username, $progressBar, $statusLabel) Get-SulcoUserGroupsExport -username $username -progressBar $progressBar -statusLabel $statusLabel }
@@ -140,12 +147,14 @@ $functionMap = @{
         "Retrieve Shared Mailboxes" = { param($username, $progressBar, $statusLabel) Get-SulcoMailbox -username $username -progressBar $progressBar -statusLabel $statusLabel }
         "Hide from GAL" = {param($username) GALHideSULCO -username $username}
         "Disable AD Account" = {param($username, $progressBar, $statusLabel) SULCODisable-ADAccount -username $username -progressBar $progressBar -statusLabel $statusLabel}
+        "Enable OOO Reply" = {param($username, $progressBar, $statusLabel) SULCO-OOO -username $username -progressBar $progressBar -statusLabel $statusLabel}
+        "Remove AD groups" = {param($username, $progressBar, $statusLabel) SULCO-RemoveADGroups -username $username -progressBar $progressBar -statusLabel $statusLabel}
     }
 }
 
 # Create a button to fetch user groups
 $button = New-Object System.Windows.Forms.Button
-$button.Location = New-Object System.Drawing.Point(60, 180)
+$button.Location = New-Object System.Drawing.Point(60, 380)
 $button.Size = New-Object System.Drawing.Size(180, 40)
 $button.Text = "Run"
 $button.Add_Click({

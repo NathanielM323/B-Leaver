@@ -2,7 +2,8 @@
 param ([string]$username)
         $operationSuccess = $false
 
-        #$username = 'George.Elysee'
+        #$username = 'Sarah.deRancourt'
+        #$accountName = Get-ADUser -Filter {SamAccountname -eq $username}
             try{ $groups = Get-ADUser $username -Properties MemberOf |Select-Object -ExpandProperty MemberOf}
 
             catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException]{
@@ -19,12 +20,19 @@ param ([string]$username)
                 Write-Host $groups
         foreach ($group in $groups)
         {
-        try {Remove-ADGroupMember -Identity $group -Members $username -confirm:$false}
+        try {Remove-ADGroupMember -Identity $group -Members $username -confirm:$false
+            
+             # Logging to CSV
+            $logPath = "\\cfel.local\dfsroot\group\ICT\Nathaniel\Leaver\Leaver Automation\Logs\TestLog.csv"
+            $logEntry = "$username,AD Groups Removed,$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+            Add-Content -Path $logPath -Value $logEntry
+            
+            }
 
         catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException]{
                     [System.Windows.Forms.MessageBox]::Show("Error: The group '$group' or user '$username' was not found in AD.","ERROR_INVALID_USERNAME_OR_Group_013")
             }
-        }
+        
 
         catch {
             if ($_.Exception.Message -like "*Cannot bind argument to parameter 'ObjectId' because it is null.*") {
@@ -34,7 +42,8 @@ param ([string]$username)
             }
             throw  # Re-throw the exception to propagate it to the main script
             }
-
+}
         start-sleep -seconds 10
-
+        return $operationSuccess
         }
+

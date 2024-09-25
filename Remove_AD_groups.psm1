@@ -4,6 +4,7 @@ param ([string]$username)
 
         #$username = 'Sarah.deRancourt'
         #$accountName = Get-ADUser -Filter {SamAccountname -eq $username}
+            #
             try{ $groups = Get-ADUser $username -Properties MemberOf |Select-Object -ExpandProperty MemberOf}
 
             catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException]{
@@ -24,9 +25,10 @@ param ([string]$username)
             
              # Logging to CSV
             $logPath = "\\cfel.local\dfsroot\group\ICT\Nathaniel\Leaver\Leaver Automation\Logs\TestLog.csv"
-            $logEntry = "$username,AD Groups Removed,$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+            $logEntry = "$username,AD Groups Removed($group),$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
             Add-Content -Path $logPath -Value $logEntry
             
+            $operationSuccess = $true
             }
 
         catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException]{
@@ -73,7 +75,7 @@ param ([string]$username)
             
              # Logging to CSV
             $logPath = "\\cfel.local\dfsroot\group\ICT\Nathaniel\Leaver\Leaver Automation\Logs\TestLog.csv"
-            $logEntry = "$username,AD Groups Removed,$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+            $logEntry = "$username,AD Groups Removed($group),$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
             Add-Content -Path $logPath -Value $logEntry
             
             }

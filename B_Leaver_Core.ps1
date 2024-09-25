@@ -41,7 +41,7 @@ Add-Type -AssemblyName System.Windows.Forms
 # Create the form
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "BLeaver"
-$form.Size = New-Object System.Drawing.Size(1200, 1200)
+$form.Size = New-Object System.Drawing.Size(1000, 1000)
 $form.StartPosition = "CenterScreen"
 
 # Add a label to display current process
@@ -93,7 +93,7 @@ $form.Controls.Add($Dropdownlabel)
 
 # Add checkboxes
 $checkboxOptions = @("Retrieve all leaver data", "Retrieve O365 groups", "Retrieve Distribution lists", "Retrieve Shared Mailboxes" , "Hide from GAL" , "Disable AD Account", 
-                    "Enable OOO Reply", "Remove AD groups")
+                    "Enable OOO Reply", "Remove AD groups" , "Remove Entra Groups")
 $checkboxes = @()
 $startY = 160  # Starting Y position for the first checkbox
 $indent = 23   # Indentation for sub-options
@@ -144,6 +144,7 @@ $functionMap = @{
         "Disable AD Account" = {param($username, $progressBar, $statusLabel) BBBDisable-ADAccount -username $username -progressBar $progressBar -statusLabel $statusLabel}
         "Enable OOO Reply" = {param($username, $progressBar, $statusLabel) BBB-OOO -username $username -progressBar $progressBar -statusLabel $statusLabel}
         "Remove AD groups" = {param($username, $progressBar, $statusLabel) BBB-RemoveADGroups -username $username -progressBar $progressBar -statusLabel $statusLabel}
+        "Remove Entra Groups" = {param($username, $progressBar, $statusLabel) BBB-RemoveEntraGroups -username $username -progressBar $progressBar -statusLabel $statusLabel}
     }
     "SULCO" = @{
         "Retrieve O365 groups" = { param($username, $progressBar, $statusLabel) Get-SulcoUserGroupsExport -username $username -progressBar $progressBar -statusLabel $statusLabel }
@@ -153,6 +154,8 @@ $functionMap = @{
         "Disable AD Account" = {param($username, $progressBar, $statusLabel) SULCODisable-ADAccount -username $username -progressBar $progressBar -statusLabel $statusLabel}
         "Enable OOO Reply" = {param($username, $progressBar, $statusLabel) SULCO-OOO -username $username -progressBar $progressBar -statusLabel $statusLabel}
         "Remove AD groups" = {param($username, $progressBar, $statusLabel) SULCO-RemoveADGroups -username $username -progressBar $progressBar -statusLabel $statusLabel}
+        "Remove Entra Groups" = {param($username, $progressBar, $statusLabel) SULCO-RemoveEntraGroups -username $username -progressBar $progressBar -statusLabel $statusLabel}
+
     }
 }
 
@@ -207,7 +210,7 @@ $userTextBox.Add_KeyPress({
 # Add a large read-only text box beneath the progress bar
 $largeTextBox = New-Object System.Windows.Forms.TextBox
 $largeTextBox.Location = New-Object System.Drawing.Point(50, 510)
-$largeTextBox.Size = New-Object System.Drawing.Size(1100, 400)
+$largeTextBox.Size = New-Object System.Drawing.Size(900, 400)
 $largeTextBox.Multiline = $true
 $largeTextBox.ScrollBars = "Vertical"
 $largeTextBox.ReadOnly = $true

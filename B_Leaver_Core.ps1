@@ -25,6 +25,10 @@ $modulePath = Join-Path $currentDirectory "Remove_AD_Groups.psm1"
 Import-Module $modulePath -Force
 Get-Module -Name Remove_AD_Groups
 
+$modulePath = Join-Path $currentDirectory "Remove_Entra_Groups.psm1"
+Import-Module $modulePath -Force
+Get-Module -Name Remove_Entra_Groups
+
 
 #--------------------------------------------------------
 

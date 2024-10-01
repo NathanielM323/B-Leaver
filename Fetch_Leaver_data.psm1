@@ -1,6 +1,6 @@
 ﻿[System.Threading.Thread]::CurrentThread.ApartmentState = "STA"
 #Install-Module AzureAD
-#connect-exchangeonline
+connect-exchangeonline
 try {Get-AzureADCurrentSessionInfo}
 
 catch [Microsoft.Open.Azure.AD.CommonLibrary.AadNeedAuthenticationException]

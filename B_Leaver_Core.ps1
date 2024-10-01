@@ -97,7 +97,7 @@ $form.Controls.Add($Dropdownlabel)
 
 # Add checkboxes
 $checkboxOptions = @("Retrieve all leaver data", "Retrieve O365 groups", "Retrieve Distribution lists", "Retrieve Shared Mailboxes" , "Hide from GAL" , "Disable AD Account", 
-                    "Enable OOO Reply", "Remove AD groups" , "Remove Entra Groups")
+                    "Enable OOO Reply", "Remove AD groups" , "Remove Entra Groups", "Move to Disabled OU")
 $checkboxes = @()
 $startY = 160  # Starting Y position for the first checkbox
 $indent = 23   # Indentation for sub-options
@@ -149,6 +149,7 @@ $functionMap = @{
         "Enable OOO Reply" = {param($username, $progressBar, $statusLabel) BBB-OOO -username $username -progressBar $progressBar -statusLabel $statusLabel}
         "Remove AD groups" = {param($username, $progressBar, $statusLabel) BBB-RemoveADGroups -username $username -progressBar $progressBar -statusLabel $statusLabel}
         "Remove Entra Groups" = {param($username, $progressBar, $statusLabel) BBB-RemoveEntraGroups -username $username -progressBar $progressBar -statusLabel $statusLabel}
+        "Move to Disabled OU" = {param($username, $progressBar, $statusLabel) BBB-DisabledOU -username $username -progressBar $progressBar -statusLabel $statusLabel}
     }
     "SULCO" = @{
         "Retrieve O365 groups" = { param($username, $progressBar, $statusLabel) Get-SulcoUserGroupsExport -username $username -progressBar $progressBar -statusLabel $statusLabel }
@@ -159,7 +160,7 @@ $functionMap = @{
         "Enable OOO Reply" = {param($username, $progressBar, $statusLabel) SULCO-OOO -username $username -progressBar $progressBar -statusLabel $statusLabel}
         "Remove AD groups" = {param($username, $progressBar, $statusLabel) SULCO-RemoveADGroups -username $username -progressBar $progressBar -statusLabel $statusLabel}
         "Remove Entra Groups" = {param($username, $progressBar, $statusLabel) SULCO-RemoveEntraGroups -username $username -progressBar $progressBar -statusLabel $statusLabel}
-
+        "Move to Disabled OU" = {param($username, $progressBar, $statusLabel) SULCO-DisabledOU -username $username -progressBar $progressBar -statusLabel $statusLabel}
     }
 }
 

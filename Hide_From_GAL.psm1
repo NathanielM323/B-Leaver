@@ -15,7 +15,7 @@
             
             # Logging to CSV
             $logPath = "\\cfel.local\dfsroot\group\ICT\Nathaniel\Leaver\Leaver Automation\Logs\TestLog.csv"
-            $logEntry = "$username,Hiddren from GAL,$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+            $logEntry = "$username,Hidden from GAL,$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
             Add-Content -Path $logPath -Value $logEntry
 
         } else {

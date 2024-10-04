@@ -42,6 +42,8 @@
             } else {
                 Write-Host "Object not found in the specified source path."
             }
+
+            return $operationSucess
 }
 
 function SULCO-DisabledOU{
@@ -90,4 +92,6 @@ param ([string]$username)
             } else {
                 Write-Host "Object not found in the specified source path."
             }
+
+             return $operationSucess
 }

@@ -29,6 +29,15 @@ $modulePath = Join-Path $currentDirectory "Remove_Entra_Groups.psm1"
 Import-Module $modulePath -Force
 Get-Module -Name Remove_Entra_Groups
 
+$modulePath = Join-Path $currentDirectory "Move_To_DisabledOU.psm1"
+Import-Module $modulePath -Force
+Get-Module -Name Move_To_DisabledOU
+
+$modulePath = Join-Path $currentDirectory "Clear_Manager.psm1"
+Import-Module $modulePath -Force
+Get-Module -Name Clear_Manager
+
+
 
 #--------------------------------------------------------
 
@@ -97,7 +106,7 @@ $form.Controls.Add($Dropdownlabel)
 
 # Add checkboxes
 $checkboxOptions = @("Retrieve all leaver data", "Retrieve O365 groups", "Retrieve Distribution lists", "Retrieve Shared Mailboxes" , "Hide from GAL" , "Disable AD Account", 
-                    "Enable OOO Reply", "Remove AD groups" , "Remove Entra Groups", "Move to Disabled OU")
+                    "Enable OOO Reply", "Remove AD groups" , "Remove Entra Groups", "Move to Disabled OU","Clear 'Manager' field")
 $checkboxes = @()
 $startY = 160  # Starting Y position for the first checkbox
 $indent = 23   # Indentation for sub-options
@@ -150,6 +159,7 @@ $functionMap = @{
         "Remove AD groups" = {param($username, $progressBar, $statusLabel) BBB-RemoveADGroups -username $username -progressBar $progressBar -statusLabel $statusLabel}
         "Remove Entra Groups" = {param($username, $progressBar, $statusLabel) BBB-RemoveEntraGroups -username $username -progressBar $progressBar -statusLabel $statusLabel}
         "Move to Disabled OU" = {param($username, $progressBar, $statusLabel) BBB-DisabledOU -username $username -progressBar $progressBar -statusLabel $statusLabel}
+        "Clear 'Manager' field" = {param($username, $progressBar, $statusLabel) BBB-ClearManager -username $username -progressBar $progressBar -statusLabel $statusLabel}
     }
     "SULCO" = @{
         "Retrieve O365 groups" = { param($username, $progressBar, $statusLabel) Get-SulcoUserGroupsExport -username $username -progressBar $progressBar -statusLabel $statusLabel }
@@ -161,6 +171,7 @@ $functionMap = @{
         "Remove AD groups" = {param($username, $progressBar, $statusLabel) SULCO-RemoveADGroups -username $username -progressBar $progressBar -statusLabel $statusLabel}
         "Remove Entra Groups" = {param($username, $progressBar, $statusLabel) SULCO-RemoveEntraGroups -username $username -progressBar $progressBar -statusLabel $statusLabel}
         "Move to Disabled OU" = {param($username, $progressBar, $statusLabel) SULCO-DisabledOU -username $username -progressBar $progressBar -statusLabel $statusLabel}
+        "Clear 'Manager' field" = {param($username, $progressBar, $statusLabel) SULCO-ClearManager -username $username -progressBar $progressBar -statusLabel $statusLabel}
     }
 }
 

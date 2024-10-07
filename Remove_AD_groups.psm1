@@ -2,9 +2,6 @@
 param ([string]$username)
         $operationSuccess = $false
 
-        #$username = 'Sarah.deRancourt'
-        #$accountName = Get-ADUser -Filter {SamAccountname -eq $username}
-            #
             try{ $groups = Get-ADUser $username -Properties MemberOf |Select-Object -ExpandProperty MemberOf}
 
             catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException]{

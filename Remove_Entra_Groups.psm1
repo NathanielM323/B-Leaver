@@ -3,7 +3,7 @@
     param ([string]$username)
             $operationSuccess = $false
 
-    #$username = 'Sarah.deRancourt'
+    #$username = 'callum.nunnery'
 
         try {$accountName = Get-ADUser -Filter {SamAccountname -eq $username}
              
@@ -33,6 +33,8 @@
                try {
                     Remove-AzureADGroupMember -ObjectId $group.ObjectId -MemberId $userObjectId -ErrorAction Stop
                     # Logging to CSV
+                    $operationSuccess = $true
+
                     $logPath = "\\cfel.local\dfsroot\group\ICT\Nathaniel\Leaver\Leaver Automation\Logs\TestLog.csv" 
                     $logEntry = "$username,Entra Groups Removed($group),$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
                     Add-Content -Path $logPath -Value $logEntry
@@ -52,7 +54,7 @@
                     }
                 }
 
-
+                return  $operationSuccess
 
            $counter ++
            write-host $counter
@@ -93,7 +95,14 @@ Function SULCO-RemoveEntraGroups{
            $counter = 0
            foreach ($group in $membership){
                 
-                try {Remove-AzureADGroupMember -ObjectId $group.ObjectId -MemberId $userObjectId -ErrorAction Stop}
+                try {Remove-AzureADGroupMember -ObjectId $group.ObjectId -MemberId $userObjectId -ErrorAction Stop
+                    # Logging to CSV
+                    $operationSuccess = $true
+
+                    $logPath = "\\cfel.local\dfsroot\group\ICT\Nathaniel\Leaver\Leaver Automation\Logs\TestLog.csv" 
+                    $logEntry = "$username,Entra Groups Removed($group),$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+                    Add-Content -Path $logPath -Value $logEntry
+                    }
 
                 catch {
                     if ($_.Exception.Message -like "*Cannot Update a mail-enabled security groups and or distribution list*") {

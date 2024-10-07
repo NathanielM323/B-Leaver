@@ -37,6 +37,10 @@ $modulePath = Join-Path $currentDirectory "Clear_Manager.psm1"
 Import-Module $modulePath -Force
 Get-Module -Name Clear_Manager
 
+$modulePath = Join-Path $currentDirectory "Convert_To_SharedMailbox.psm1"
+Import-Module $modulePath -Force
+Get-Module -Name Convert_To_SharedMailbox
+
 
 
 #--------------------------------------------------------
@@ -106,7 +110,7 @@ $form.Controls.Add($Dropdownlabel)
 
 # Add checkboxes
 $checkboxOptions = @("Retrieve all leaver data", "Retrieve O365 groups", "Retrieve Distribution lists", "Retrieve Shared Mailboxes" , "Hide from GAL" , "Disable AD Account", 
-                    "Enable OOO Reply", "Remove AD groups" , "Remove Entra Groups", "Move to Disabled OU","Clear 'Manager' field")
+                    "Enable OOO Reply", "Remove AD groups" , "Remove Entra Groups", "Move to Disabled OU","Clear 'Manager' field","Convert to Shared Mailbox")
 $checkboxes = @()
 $startY = 160  # Starting Y position for the first checkbox
 $indent = 23   # Indentation for sub-options
@@ -160,6 +164,7 @@ $functionMap = @{
         "Remove Entra Groups" = {param($username, $progressBar, $statusLabel) BBB-RemoveEntraGroups -username $username -progressBar $progressBar -statusLabel $statusLabel}
         "Move to Disabled OU" = {param($username, $progressBar, $statusLabel) BBB-DisabledOU -username $username -progressBar $progressBar -statusLabel $statusLabel}
         "Clear 'Manager' field" = {param($username, $progressBar, $statusLabel) BBB-ClearManager -username $username -progressBar $progressBar -statusLabel $statusLabel}
+        "Convert to Shared Mailbox" = {param($username, $progressBar, $statusLabel) BBB-ConvertMailbox -username $username -progressBar $progressBar -statusLabel $statusLabel}
     }
     "SULCO" = @{
         "Retrieve O365 groups" = { param($username, $progressBar, $statusLabel) Get-SulcoUserGroupsExport -username $username -progressBar $progressBar -statusLabel $statusLabel }
@@ -172,12 +177,13 @@ $functionMap = @{
         "Remove Entra Groups" = {param($username, $progressBar, $statusLabel) SULCO-RemoveEntraGroups -username $username -progressBar $progressBar -statusLabel $statusLabel}
         "Move to Disabled OU" = {param($username, $progressBar, $statusLabel) SULCO-DisabledOU -username $username -progressBar $progressBar -statusLabel $statusLabel}
         "Clear 'Manager' field" = {param($username, $progressBar, $statusLabel) SULCO-ClearManager -username $username -progressBar $progressBar -statusLabel $statusLabel}
+        "Convert to Shared Mailbox" = {param($username, $progressBar, $statusLabel) SULCO-ConvertMailbox -username $username -progressBar $progressBar -statusLabel $statusLabel}
     }
 }
 
 # Create a button to fetch user groups
 $button = New-Object System.Windows.Forms.Button
-$button.Location = New-Object System.Drawing.Point(60, 380)
+$button.Location = New-Object System.Drawing.Point(760, 380)
 $button.Size = New-Object System.Drawing.Size(180, 40)
 $button.Text = "Run"
 $button.Add_Click({
@@ -209,8 +215,6 @@ $button.Add_Click({
 
     $statusLabel.Text = "Status: Leaver Process Completed"
 })
-
-
 
 
 $form.Controls.Add($button)

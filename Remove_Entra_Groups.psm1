@@ -3,8 +3,7 @@
     param ([string]$username)
             $operationSuccess = $false
 
-    #$username = 'callum.nunnery'
-
+        #$username = 'lara.visentin'
         try {$accountName = Get-ADUser -Filter {SamAccountname -eq $username}
              
               $userEmail = $accountName.UserPrincipalName

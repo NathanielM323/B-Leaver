@@ -109,7 +109,7 @@ $Dropdownlabel.Text = "Domain:"
 $form.Controls.Add($Dropdownlabel)
 
 # Add checkboxes
-$checkboxOptions = @("Retrieve all leaver data", "Retrieve O365 groups", "Retrieve Distribution lists", "Retrieve Shared Mailboxes" , "Hide from GAL" , "Disable AD Account", 
+$checkboxOptions = @("Select All", "Retrieve O365 groups", "Retrieve Distribution lists", "Retrieve Shared Mailboxes" , "Hide from GAL" , "Disable AD Account", 
                     "Enable OOO Reply", "Remove AD groups" , "Remove Entra Groups", "Move to Disabled OU","Clear 'Manager' field","Convert to Shared Mailbox")
 $checkboxes = @()
 $startY = 160  # Starting Y position for the first checkbox
@@ -204,6 +204,7 @@ $button.Add_Click({
                 # Log the error in the main text box
                 $largeTextBox.AppendText("Error during $checkboxText for $selectedDomain user: $username. Error: $($_.Exception.Message)`r`n")
                 Write-Host "Error during $checkboxText $($_.Exception.Message)"
+                throw $_
             }
 
             if ($operationSuccess) {

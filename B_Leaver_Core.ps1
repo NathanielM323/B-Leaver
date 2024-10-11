@@ -200,6 +200,7 @@ $button.Add_Click({
                 # Invoke the function with username, progressBar, and statusLabel as parameters
                 $operationSuccess = $selectedFunctions[$checkboxText].Invoke($username, $progressBar, $statusLabel)
                 Write-Host "Operation success for $checkboxText $operationSuccess"
+                write-Host $operationSuccess
             } catch {
                 # Log the error in the main text box
                 $largeTextBox.AppendText("Error during $checkboxText for $selectedDomain user: $username. Error: $($_.Exception.Message)`r`n")
@@ -207,7 +208,7 @@ $button.Add_Click({
                 throw $_
             }
 
-            if ($operationSuccess) {
+            if ($operationSuccess -eq $true) {
                 # Only append success message if the operation succeeded
                 $largeTextBox.AppendText("$checkboxText for $selectedDomain user: $username completed successfully.`r`n")
             }

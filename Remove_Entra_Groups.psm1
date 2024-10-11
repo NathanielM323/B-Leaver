@@ -3,7 +3,6 @@
     param ([string]$username)
             $operationSuccess = $false
 
-        #$username = 'lara.visentin'
         try {$accountName = Get-ADUser -Filter {SamAccountname -eq $username}
              
               $userEmail = $accountName.UserPrincipalName
@@ -66,8 +65,6 @@ Function SULCO-RemoveEntraGroups{
     
     param ([string]$username)
             $operationSuccess = $false
-
-    #$username = 'leah.walland'
 
         try {$accountName = Get-ADUser -Filter {SamAccountname -eq $username}
              

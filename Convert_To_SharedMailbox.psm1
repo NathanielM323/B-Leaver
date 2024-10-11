@@ -2,6 +2,7 @@
     param ([string]$username)
          
     $operationSuccess = $false
+    #$username = 'Lara.Visentin'
 
      try {$accountName = Get-ADUser -Filter {SamAccountname -eq $username}
              
@@ -17,7 +18,9 @@
              throw
            }
 
-     try {Set-Mailbox -Identity $mailbox -Type Shared
+     try {
+             start-sleep -Seconds 30
+             Set-Mailbox -Identity $mailbox -Type Shared
              
               start-sleep -Seconds 30
               # Logging to CSV
@@ -41,7 +44,6 @@ function SULCO-ConvertMailbox{
          
     $domainController = "startuploans.local"
     $operationSuccess = $false
-    $username = 'samina.khan'
 
      try {$accountName = Get-ADUser -Filter {SamAccountname -eq $username} -Server $domainController
              
